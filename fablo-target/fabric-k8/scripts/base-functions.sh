@@ -55,6 +55,9 @@ deployOrderer() {
     done   
 }
 
+
+# Might no be needed, after last meeting
+
 adminConfig() {
     kubectl hlf inspect --output $CONFIG_DIR/ordservice.yaml -o $MSP_ORD && \
     
@@ -65,11 +68,50 @@ adminConfig() {
    kubectl hlf utils adduser --userPath=$CONFIG_DIR/admin-ordservice.yaml --config=$CONFIG_DIR/ordservice.yaml --username=$ADMIN_USER --mspid=$MSP_ORD
 }
 
+
+installChannels() {
+    printItalics "Creating 'my-channel1' on Org1/peer0" "U1F63B"
+    sleep 5
+    kubectl hlf channel generate --output=$CONFIG_DIR/$CHANNEL_NAME.block --name=$CHANNEL_NAME --organizations $MSP_ORG --ordererOrganizations $MSP_ORD && \
+
+    kubectl hlf ca enroll --name=$ORD-ca --namespace=$NAMESPACE --user=$ADMIN_USER --secret=$ADMIN_PASS --mspid $MSP_ORD --ca-name $USER_CA_TYPE --output $CONFIG_DIR/admin-tls-ordservice.yaml && \
+
+    sleep 5
+
+    kubectl hlf ordnode join --block=$CONFIG_DIR/$CHANNEL_NAME.block --name=$ORD-node1 --namespace=$NAMESPACE --identity=$CONFIG_DIR/admin-tls-ordservice.yaml
+}
+
+joinChannels() {
+
+    printItalics "Joining 'my-channel1' on  Org1/peer1" "U1F638"
+
+    kubectl hlf ca register --name=$ORG-ca --user=$ADMIN_USER --secret=$ADMIN_PASS --type=admin --enroll-id $ORG1_CA_ADMIN_NAME --enroll-secret=$ORG1_CA_ADMIN_PASSWORD --mspid $MSP_ORG && \
+    
+    kubectl hlf ca enroll --name=$ORG-ca --user=$ADMIN_USER --secret=$ADMIN_PASS --mspid $MSP_ORG --ca-name ca  --output $CONFIG_DIR/peer-org1.yaml && \
+
+    kubectl hlf inspect --output $CONFIG_DIR/org1.yaml -o $MSP_ORG -o $MSP_ORD && \
+
+    kubectl hlf utils adduser --userPath=$CONFIG_DIR/peer-org1.yaml --config=$CONFIG_DIR/org1.yaml --username=$ADMIN_USER --mspid=$MSP_ORG && \
+
+    kubectl hlf channel join --name=$CHANNEL_NAME --config=$CONFIG_DIR/org1.yaml --user=$ADMIN_USER -p=$ORG-peer1.$NAMESPACE
+}
+
 destroyNetwork() {
     kubectl delete fabricorderernodes.hlf.kungfusoftware.es --all-namespaces --all
     kubectl delete fabricpeers.hlf.kungfusoftware.es --all-namespaces --all
     kubectl delete fabriccas.hlf.kungfusoftware.es --all-namespaces --all
     # kubectl delete fabricchaincode.hlf.kungfusoftware.es --all-namespaces --all
+}
+
+hlfOperator() {
+helm repo add kfs $REPOSITORY --force-update
+
+helm install hlf-operator --version=1.6.0 kfs/hlf-operator
+
+while [ "$(kubectl get pods -l=app.kubernetes.io/name=hlf-operator -o jsonpath='{.items[*].status.containerStatuses[0].ready}')" != "true" ]; do
+   sleep 5
+   echo $BLUE "Waiting for Operator to be ready." $RESETBG
+done
 }
 
 

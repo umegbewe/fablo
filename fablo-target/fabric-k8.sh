@@ -17,12 +17,15 @@ source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/base-functions.sh"
 source "$FABLO_NETWORK_ROOT/fabric-k8/.env"
 
 networkUp() {
-  printHeadline "Starting Network..." "U1F984"
-  checkDependencies
-  certsGenerate && \
-  deployPeer && \
-  deployOrderer && \
-  adminConfig && \
+  # printHeadline "Starting Network..." "U1F984"
+  # hlfOperator && \
+  # checkDependencies
+  # certsGenerate && \
+  # deployPeer && \
+  # deployOrderer && \
+  # adminConfig && \
+  # installChannels &&\
+  joinChannels && \
   printHeadline "Done! Enjoy your fresh network" "U1F984"
 }
 
