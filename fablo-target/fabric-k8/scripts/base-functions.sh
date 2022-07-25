@@ -62,6 +62,9 @@ deployOrderer() {
 # Might no be needed, after last meeting
 
 adminConfig() {
+
+    mkdir $CONFIG_DIR
+    
     kubectl hlf inspect --output $CONFIG_DIR/ordservice.yaml -o $MSP_ORD && \
     
     kubectl hlf ca register --name=$ORD-ca --user=$ADMIN_USER --secret=$ADMIN_PASS --type=admin --enroll-id=$ORG1_CA_ADMIN_NAME --enroll-secret=$ORG1_CA_ADMIN_PASSWORD --mspid=$MSP_ORD
