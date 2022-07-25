@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/util.sh"
+
+
 certsGenerate() {
 
     printItalics "Deploying Certificate Authority" "U1F984"
@@ -65,18 +68,18 @@ adminConfig() {
     
     kubectl hlf ca enroll --name=$ORD-ca --user=$ADMIN_USER --secret=$ADMIN_PASS --mspid $MSP_ORD --ca-name ca  --output $CONFIG_DIR/admin-ordservice.yaml && \
     
-   kubectl hlf utils adduser --userPath=$CONFIG_DIR/admin-ordservice.yaml --config=$CONFIG_DIR/ordservice.yaml --username=$ADMIN_USER --mspid=$MSP_ORD
+    kubectl hlf utils adduser --userPath=$CONFIG_DIR/admin-ordservice.yaml --config=$CONFIG_DIR/ordservice.yaml --username=$ADMIN_USER --mspid=$MSP_ORD
 }
 
 
 installChannels() {
     printItalics "Creating 'my-channel1' on Org1/peer0" "U1F63B"
-    sleep 5
+    sleep 10
     kubectl hlf channel generate --output=$CONFIG_DIR/$CHANNEL_NAME.block --name=$CHANNEL_NAME --organizations $MSP_ORG --ordererOrganizations $MSP_ORD && \
 
     kubectl hlf ca enroll --name=$ORD-ca --namespace=$NAMESPACE --user=$ADMIN_USER --secret=$ADMIN_PASS --mspid $MSP_ORD --ca-name $USER_CA_TYPE --output $CONFIG_DIR/admin-tls-ordservice.yaml && \
 
-    sleep 5
+    sleep 10
 
     kubectl hlf ordnode join --block=$CONFIG_DIR/$CHANNEL_NAME.block --name=$ORD-node1 --namespace=$NAMESPACE --identity=$CONFIG_DIR/admin-tls-ordservice.yaml
 }
@@ -93,8 +96,15 @@ joinChannels() {
 
     kubectl hlf utils adduser --userPath=$CONFIG_DIR/peer-org1.yaml --config=$CONFIG_DIR/org1.yaml --username=$ADMIN_USER --mspid=$MSP_ORG && \
 
-    kubectl hlf channel join --name=$CHANNEL_NAME --config=$CONFIG_DIR/org1.yaml --user=$ADMIN_USER -p=$ORG-peer1.$NAMESPACE
+    retry 3 kubectl hlf channel join --name=$CHANNEL_NAME --config=$CONFIG_DIR/org1.yaml --user=$ADMIN_USER -p=$ORG-peer1.$NAMESPACE
 }
+
+installChaincodes() {
+    buildAndInstallChaincode "$CHAINCODE_NAME" "$CHAINCODE_LANG" "$CHAINCODES_BASE_DIR/./chaincodes/chaincode-kv-node" "$CHAINCODE_VERSION" && \
+    deployChaincode
+    approveChaincode "$CHAINCODE_NAME" "$CHAINCODE_VERSION" "$CHANNEL_NAME"
+}
+
 
 destroyNetwork() {
     kubectl delete fabricorderernodes.hlf.kungfusoftware.es --all-namespaces --all

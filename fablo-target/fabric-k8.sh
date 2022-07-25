@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -e
 
 FABLO_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
@@ -10,7 +10,7 @@ CONFIG_DIR="$FABLO_NETWORK_ROOT/fabric-config/connection-profiles/fabric-k8"
 
 source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/base-help.sh"
 source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/base-functions.sh"
-# source "$FABLO_NETWORK_ROOT/fabric-docker/scripts/chaincode-functions.sh"
+source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/chaincode-ops.sh"
 # source "$FABLO_NETWORK_ROOT/fabric-docker/channel-query-scripts.sh"
 # source "$FABLO_NETWORK_ROOT/fabric-docker/snapshot-scripts.sh"
 # source "$FABLO_NETWORK_ROOT/fabric-docker/commands-generated.sh"
@@ -34,6 +34,10 @@ networkDown() {
   destroyNetwork
 }
 
+chaincode(){
+  installChaincodes
+}
+
 
 
 
@@ -50,7 +54,7 @@ elif [ "$1" = "start" ]; then
 elif [ "$1" = "stop" ]; then
   stopNetwork
 elif [ "$1" = "chaincodes" ] && [ "$2" = "install" ]; then
-  installChaincodes
+  chaincode
 elif [ "$1" = "chaincode" ] && [ "$2" = "install" ]; then
   installChaincode "$3" "$4"
 elif [ "$1" = "chaincode" ] && [ "$2" = "upgrade" ]; then
