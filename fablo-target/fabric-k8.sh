@@ -17,9 +17,10 @@ source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/chaincode-ops.sh"
 source "$FABLO_NETWORK_ROOT/fabric-k8/.env"
 
 networkUp() {
+  printHeadline "Checking dependencies..." "U1F984"
+  checkDependencies
   printHeadline "Starting Network..." "U1F984"
   hlfOperator && \
-  checkDependencies
   certsGenerate && \
   deployPeer && \
   deployOrderer && \
@@ -53,7 +54,7 @@ elif [ "$1" = "start" ]; then
   startNetwork
 elif [ "$1" = "stop" ]; then
   stopNetwork
-elif [ "$1" = "chaincodes" ] && [ "$2" = "install" ]; then
+elif [ "$1" = "chaincodes" ]; then
   chaincode
 elif [ "$1" = "chaincode" ] && [ "$2" = "install" ]; then
   installChaincode "$3" "$4"

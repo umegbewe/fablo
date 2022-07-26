@@ -86,7 +86,7 @@ installChannels() {
 
 joinChannels() {
 
-    printItalics "Joining 'my-channel1' on  Org1/peer1" "U1F638"
+    printItalics "Joining 'my-channel1' on  Org1/peer0" "U1F638"
 
     kubectl hlf ca register --name=$ORG-ca --user=$ADMIN_USER --secret=$ADMIN_PASS --type=admin --enroll-id $ORG1_CA_ADMIN_NAME --enroll-secret=$ORG1_CA_ADMIN_PASSWORD --mspid $MSP_ORG && \
     
@@ -96,13 +96,31 @@ joinChannels() {
 
     kubectl hlf utils adduser --userPath=$CONFIG_DIR/peer-org1.yaml --config=$CONFIG_DIR/org1.yaml --username=$ADMIN_USER --mspid=$MSP_ORG && \
 
+    printItalics "Joining 'my-channel1' on  Org1/peer0" "U1F638"
+
+    retry 3 kubectl hlf channel join --name=$CHANNEL_NAME --config=$CONFIG_DIR/org1.yaml --user=$ADMIN_USER -p=$ORG-peer0.$NAMESPACE
+
+    printItalics "Joining 'my-channel1' on  Org1/peer1" "U1F638"
+
     retry 3 kubectl hlf channel join --name=$CHANNEL_NAME --config=$CONFIG_DIR/org1.yaml --user=$ADMIN_USER -p=$ORG-peer1.$NAMESPACE
+
+    # add anchor peer
+
+    printItalics "Electing on Org1/peer0 as Anchor peer" "U1F638"
+
+    kubectl hlf channel addanchorpeer --channel=$CHANNEL_NAME --config=$CONFIG_DIR/org1.yaml --user=$ADMIN_USER --peer=$ORG-peer0.$NAMESPACE   
 }
 
 installChaincodes() {
-    buildAndInstallChaincode "$CHAINCODE_NAME" "$CHAINCODE_LANG" "$CHAINCODES_BASE_DIR/./chaincodes/chaincode-kv-node" "$CHAINCODE_VERSION" && \
-    deployChaincode
-    approveChaincode "$CHAINCODE_NAME" "$CHAINCODE_VERSION" "$CHANNEL_NAME"
+    printItalics "Building chaincode $CHAINCODE_NAME" "U1F618"
+
+    buildAndInstallChaincode "$CHAINCODE_NAME" "0" "$CHAINCODE_LANG" "$CHAINCODES_BASE_DIR/./chaincodes/chaincode-kv-node" "$CHAINCODE_VERSION"
+    buildAndInstallChaincode "$CHAINCODE_NAME" "1" "$CHAINCODE_LANG" "$CHAINCODES_BASE_DIR/./chaincodes/chaincode-kv-node" "$CHAINCODE_VERSION"
+    
+    approveChaincode "$CHAINCODE_NAME" "1" "$CHAINCODE_VERSION" "$CHANNEL_NAME"
+
+    printItalics "Committing chaincode '$CHAINCODE_NAME' on channel '$CHANNEL_NAME' as '$ORG'" "U1F618"
+    commitChaincode "$CHAINCODE_NAME" "1" "$CHAINCODE_VERSION" "$CHANNEL_NAME"
 }
 
 
@@ -110,7 +128,7 @@ destroyNetwork() {
     kubectl delete fabricorderernodes.hlf.kungfusoftware.es --all-namespaces --all
     kubectl delete fabricpeers.hlf.kungfusoftware.es --all-namespaces --all
     kubectl delete fabriccas.hlf.kungfusoftware.es --all-namespaces --all
-    # kubectl delete fabricchaincode.hlf.kungfusoftware.es --all-namespaces --all
+    kubectl delete fabricchaincode.hlf.kungfusoftware.es --all-namespaces --all
 }
 
 hlfOperator() {
@@ -158,8 +176,6 @@ inputLogShort() {
 }
 
 checkDependencies() {
-    printItalics "Checking Dependencies" "U1F984"
-
     if [[  `command -v kubectl` ]]; then 
         printf "\nKubectl installed...\n"
     else
