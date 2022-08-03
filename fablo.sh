@@ -2,7 +2,7 @@
 
 set -e
 
-FABLO_VERSION="1.1.0-unstable"
+FABLO_VERSION="1.1.0"
 FABLO_IMAGE_NAME="softwaremill/fablo"
 FABLO_IMAGE="$FABLO_IMAGE_NAME:$FABLO_VERSION"
 
@@ -37,10 +37,23 @@ getSnapshotPath() {
   fi
 }
 
-printHelp() {
-  echo "Fablo -- kick-off and manage your Hyperledger Fabric network
+printSplash() {
+  darkGray=$'\e[90m'
+  end=$'\e[0m'
+  echo ""
+  echo "┌──────      .─.       ┌─────.    ╷           .────."
+  echo "│           /   \      │      │   │         ╱        ╲ "
+  echo "├─────     /     \     ├─────:    │        │          │"
+  echo "│         /───────\    │      │   │         ╲        ╱ "
+  printf "╵        /         \   └─────'    └──────     '────'    %24s\n" "v$FABLO_VERSION"
+  echo "${darkGray}┌┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┐"
+  echo "│ https://fablo.io | created at SoftwareMill | backed by Hyperledger Foundation│"
+  echo "└┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┘${end}"
+}
 
-Usage:
+printHelp() {
+  printSplash
+  echo "Usage:
   fablo init [node] [rest] [dev]
     Creates simple Fablo config in current directory with optional Node.js, chaincode and REST API and dev mode.
 
@@ -124,18 +137,20 @@ executeOnFabloDocker() {
 }
 
 useVersion() {
+  printSplash
   local version="$1"
 
   if [ -n "$version" ]; then
     echo "Updating '$0' to version $version..."
     set +e
-    curl -Lf https://github.com/softwaremill/fablo/releases/download/"$version"/fablo.sh -o "$0" && chmod +x "$0"
+    curl -Lf https://github.com/hyperledger-labs/fablo/releases/download/"$version"/fablo.sh -o "$0" && chmod +x "$0"
   else
     executeOnFabloDocker "fablo:list-versions"
   fi
 }
 
 initConfig() {
+  printSplash
   executeOnFabloDocker "fablo:init $1 $2"
   cp -R -i "$FABLO_TEMP_DIR/." "$COMMAND_CALL_ROOT/"
 }
@@ -151,6 +166,7 @@ extendConfig() {
 }
 
 generateNetworkConfig() {
+  printSplash
   local fablo_config=${1:-$(getDefaultFabloConfig)}
   local fablo_target=${2:-$FABLO_TARGET}
 
@@ -160,7 +176,7 @@ generateNetworkConfig() {
   echo "    FABLO_NETWORK_ROOT: $fablo_target"
 
   mkdir -p "$fablo_target"
-  executeOnFabloDocker "fablo:setup-docker" "$fablo_target" "$fablo_config"
+  executeOnFabloDocker "fablo:setup-network" "$fablo_target" "$fablo_config"
   ("$fablo_target/hooks/post-generate.sh")
 }
 
@@ -177,17 +193,26 @@ networkUp() {
     echo "Network target directory is empty"
     generateNetworkConfig "$1"
   fi
-  "$FABLO_TARGET/fabric-docker.sh" up
+  executeFabloCommand up
 }
 
-executeFabloDockerCommand() {
+executeFabloCommand() {
   if [ ! -d "$FABLO_TARGET" ]; then
     echo "Error: This command needs the network to be generated at '$FABLO_TARGET'! Execute 'generate' or 'up' command."
     exit 1
   fi
 
-  echo "Executing Fablo docker command: $1"
-  "$FABLO_TARGET/fabric-docker.sh" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+  if [ -f "$FABLO_TARGET/fabric-docker.sh" ]; then
+    echo "Executing Fablo Docker command: $1"
+    "$FABLO_TARGET/fabric-docker.sh" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+  elif [ -f "$FABLO_TARGET/fabric-k8s.sh" ]; then
+    echo "Executing Fablo Kubernetes command: $1"
+    "$FABLO_TARGET/fabric-k8s.sh" "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+  else
+    echo "Error: Corrupted Fablo target directory ($FABLO_TARGET)"
+    echo "Cannot execute command $1"
+    exit 1
+  fi
 }
 
 createSnapshot() {
@@ -199,7 +224,7 @@ createSnapshot() {
     exit 1
   fi
 
-  executeFabloDockerCommand snapshot "$FABLO_TEMP_DIR"
+  executeFabloCommand snapshot "$FABLO_TEMP_DIR"
   (cd "$FABLO_TEMP_DIR" && tar czf tmp.tar.gz *)
   mv "$FABLO_TEMP_DIR/tmp.tar.gz" "$archive"
   echo "📦 Created snapshot at '$archive'!"
@@ -262,5 +287,5 @@ elif [ "$COMMAND" = "restore" ]; then
   restoreSnapshot "$2" "${3:-""}"
 
 else
-  executeFabloDockerCommand "$COMMAND" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+  executeFabloCommand "$COMMAND" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
 fi

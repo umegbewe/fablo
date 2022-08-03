@@ -17,7 +17,7 @@ import { Capabilities } from "../types/FabloConfigExtended";
 import { version } from "../repositoryUtils";
 
 const ListCompatibleUpdatesGeneratorType = require.resolve("../list-compatible-updates");
-const findDuplicatedItems = (arr: any[]) => arr.filter((item, index) => arr.indexOf(item) != index);
+const findDuplicatedItems = (arr: unknown[]) => arr.filter((item, index) => arr.indexOf(item) != index);
 
 const validationErrorType = {
   CRITICAL: "validation-critical",
@@ -86,10 +86,6 @@ class ValidateGenerator extends Generator {
     this.composeWith(ListCompatibleUpdatesGeneratorType);
   }
 
-  async initializing() {
-    this.log(config.splashScreen());
-  }
-
   async validate() {
     this._validateIfConfigFileExists(this.options.fabloConfig);
 
@@ -98,6 +94,7 @@ class ValidateGenerator extends Generator {
     this._validateSupportedFabloVersion(networkConfig.$schema);
     this._validateFabricVersion(networkConfig.global.fabricVersion);
     this._validateOrgs(networkConfig.orgs);
+    this._validateEngineSpecificSettings(networkConfig);
 
     // === Validate Orderers =============
     this._validateIfOrdererDefinitionExists(networkConfig.orgs);
@@ -431,6 +428,19 @@ class ValidateGenerator extends Generator {
       });
   }
 
+  _validateEngineSpecificSettings(networkConfig: FabloConfigJson): void {
+    if (networkConfig.global.engine === "kubernetes") {
+      if (!version(networkConfig.global.fabricVersion).isGreaterOrEqual("2.0.0")) {
+        this.emit(validationErrorType.ERROR, {
+          category: validationCategories.GENERAL,
+          message: `Kubernetes is not supported by Fablo for Fabric below version 2.0.0`,
+        });
+      }
+    }
+
+    // TODO engine-specific validation rules
+  }
+
   _validateExplorer(global: GlobalJson, orgs: OrgJson[]): void {
     if (global.tools?.explorer === true) {
       orgs
@@ -455,7 +465,10 @@ class ValidateGenerator extends Generator {
         orgs
           .filter((o) => o.tools?.explorer === true)
           .forEach(() => {
-            this.emit(validationErrorType.WARN, { category: validationCategories.ORGS, message: warnMessage });
+            this.emit(validationErrorType.WARN, {
+              category: validationCategories.ORGS,
+              message: warnMessage,
+            });
           });
       }
     }
