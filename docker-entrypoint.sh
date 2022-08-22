@@ -47,6 +47,10 @@ yeoman_command=${1:-Fablo:setup-network}
 
 executeYeomanCommand "$yeoman_command"
 
-if echo "$yeoman_command" | grep "setup-network"; then
-  formatGeneratedFiles
-fi
+
+
+## not needed for kubernetes feature since the yaml are generated automatically
+
+# if echo "$yeoman_command" | grep "setup-network"; then
+#   formatGeneratedFiles
+# fi

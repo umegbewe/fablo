@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/util.sh"
+source "$FABLO_NETWORK_ROOT/fabric-k8s/scripts/util.sh"
 
 
 certsGenerate() {

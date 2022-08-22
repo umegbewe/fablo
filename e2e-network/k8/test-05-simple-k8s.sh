@@ -2,16 +2,16 @@
 
 set -e
 
-# get container names
 
 TEST_TMP="$(rm -rf "$0.tmpdir" && mkdir -p "$0.tmpdir" && (cd "$0.tmpdir" && pwd))"
 TEST_LOGS="$(mkdir -p "$0.logs" && (cd "$0.logs" && pwd))"
-FABLO_HOME="$TEST_TMP/../../../"
+FABLO_HOME="$TEST_TMP/../../.."
 
 networkUp() {
   # "$FABLO_HOME/fablo-build.sh"
   (cd "$TEST_TMP" && "$FABLO_HOME/fablo.sh" init kubernetes node)
-  (cd "$TEST_TMP" && "$FABLO_HOME/fablo-target/fabric-k8.sh" up)
+  (cd "$TEST_TMP" && "$FABLO_HOME/fablo.sh" up $FABLO_HOME/fablo-config.json)
+  ("$TEST_TMP/fablo-target/fabric-k8s.sh" up)
 }
 
 

@@ -5,16 +5,13 @@ set -e
 FABLO_NETWORK_ROOT="$(cd "$(dirname "$0")" && pwd)"
 
 # location of generated configurations
-CONFIG_DIR="$FABLO_NETWORK_ROOT/fabric-config/connection-profiles/fabric-k8"
+CONFIG_DIR="$FABLO_NETWORK_ROOT/fabric-config/fabric-k8"
 
 
-source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/base-help.sh"
-source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/base-functions.sh"
-source "$FABLO_NETWORK_ROOT/fabric-k8/scripts/chaincode-functions.sh"
-# source "$FABLO_NETWORK_ROOT/fabric-docker/channel-query-scripts.sh"
-# source "$FABLO_NETWORK_ROOT/fabric-docker/snapshot-scripts.sh"
-# source "$FABLO_NETWORK_ROOT/fabric-docker/commands-generated.sh"
-source "$FABLO_NETWORK_ROOT/fabric-k8/.env"
+source "$FABLO_NETWORK_ROOT/fabric-k8s/scripts/base-help.sh"
+source "$FABLO_NETWORK_ROOT/fabric-k8s/scripts/base-functions.sh"
+source "$FABLO_NETWORK_ROOT/fabric-k8s/scripts/chaincode-functions.sh"
+source "$FABLO_NETWORK_ROOT/fabric-k8s/.env"
 
 networkUp() {
   printHeadline "Checking dependencies..." "U1F984"
