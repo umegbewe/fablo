@@ -2,7 +2,6 @@
 
 set -e
 
-
 TEST_TMP="$(rm -rf "$0.tmpdir" && mkdir -p "$0.tmpdir" && (cd "$0.tmpdir" && pwd))"
 TEST_LOGS="$(mkdir -p "$0.logs" && (cd "$0.logs" && pwd))"
 FABLO_HOME="$TEST_TMP/../../.."
@@ -13,7 +12,6 @@ networkUp() {
   ("$FABLO_HOME/fablo.sh" up $FABLO_HOME/fablo-config.json)
   ("$TEST_TMP/fablo-target/fabric-k8s.sh" up)
 }
-
 
 dumpLogs() {
   echo "Saving logs of $1 to $TEST_LOGS/$1.log"
