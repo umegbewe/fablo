@@ -9,8 +9,8 @@ FABLO_HOME="$TEST_TMP/../../.."
 
 networkUp() {
   # "$FABLO_HOME/fablo-build.sh"
-  (cd "$TEST_TMP" && "$FABLO_HOME/fablo.sh" init kubernetes node)
-  (cd "$TEST_TMP" && "$FABLO_HOME/fablo.sh" up $FABLO_HOME/fablo-config.json)
+  ("$FABLO_HOME/fablo.sh" init kubernetes node)
+  ("$FABLO_HOME/fablo.sh" up $FABLO_HOME/fablo-config.json)
   ("$TEST_TMP/fablo-target/fabric-k8s.sh" up)
 }
 
