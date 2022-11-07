@@ -10,7 +10,7 @@ fcn="$5"
 key="$6"
 value="$7"
 expected="$8"
-config="$TEST_TMP/fablo-target/fabric-config/fabric-k8/org1.yaml"
+config="$9"
 
 
 

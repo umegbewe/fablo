@@ -59,9 +59,9 @@ waitForContainer "$peer1" "Membership view has changed. peers went online:"
 
 #Test simple chaincode
 expectInvoke "admin" "org1-peer1.default" "my-channel1" "chaincode1" \
- "put" "[\"name\"]" "Willy Wonka" "{\"success\":\"OK\"}"
+ "put" "[\"name\"]" "Willy Wonka" "{\"success\":\"OK\"}" "$TEST_TMP/fablo-target/fabric-config/fabric-k8/org1.yaml"
 expectInvoke "admin" "org1-peer1.default" "my-channel1" "chaincode1" \
- "get" "[\"name\"]" "" '{"success":"Willy Wonka"}'
+ "get" "[\"name\"]" "" '{"success":"Willy Wonka"}' "$TEST_TMP/fablo-target/fabric-config/fabric-k8/org1.yaml"
 
 
 # Reset and ensure the state is lost after reset
