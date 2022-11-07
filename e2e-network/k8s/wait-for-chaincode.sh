@@ -5,7 +5,7 @@ peer=$2
 channel=$3
 chaincode=$4
 version=$5
-config=$TEST_TMP/fablo-target/fabric-config/fabric-k8/org1.yaml
+config="$TEST_TMP/fablo-target/fabric-config/fabric-k8/org1.yaml"
 
 if [ -z "$version" ]; then
   echo "Usage: ./wait-for-chaincode.sh [user] [peer] [channel] [chaincode] [version]"
