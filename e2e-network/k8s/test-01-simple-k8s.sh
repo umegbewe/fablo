@@ -20,7 +20,7 @@ dumpLogs() {
 
 networkDown() {
   rm -rf "$TEST_LOGS"
-  (cd "$TEST_TMP" && "$(find . -type f -iname 'fabric-k8s.sh')" down)
+  (cd "$TEST_TMP" && "$FABLO_HOME/fablo.sh" down)
 }
 
 waitForContainer() {
